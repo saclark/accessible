@@ -1,0 +1,3 @@
+numbers:
+  integers:
+    :one: <%= 1 / 1 %>
