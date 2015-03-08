@@ -1,4 +1,6 @@
 # Accessible
+[![Build Status](https://travis-ci.org/saclark/accessible.svg)](https://travis-ci.org/saclark/accessible) [![Coverage Status](https://coveralls.io/repos/saclark/accessible/badge.svg)](https://coveralls.io/r/saclark/accessible)
+
 A simple and flexible means of configuration for Ruby applications.
 
 # Set up a configuration class
