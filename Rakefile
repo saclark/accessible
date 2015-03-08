@@ -1,6 +1,6 @@
 require 'bundler/gem_tasks'
-require 'rake/testtask'
 require 'coveralls/rake/task'
+require 'rake/testtask'
 
 Coveralls::RakeTask.new
 
