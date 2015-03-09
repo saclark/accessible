@@ -40,7 +40,7 @@ module Accessible
     def []=(key, new_value)
       Accessorizers.define_accessors(to_h, key)
       Accessorizers.define_accessors(self, key)
-      to_h[key] = Accessible::Accessorizers.accessorize_data(new_value)
+      to_h[key] = Accessorizers.accessorize_data(new_value)
     end
   end
 end
