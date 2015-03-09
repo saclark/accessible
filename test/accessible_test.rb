@@ -177,7 +177,9 @@ class AccessibleTest < Minitest::Spec
       end
 
       it 'should delegate to `@data`' do
-        (config[:a] = 'a').must_equal(config.instance_variable_get(:@data)[:a] = 'a')
+        config.load({ :a => 'a' })
+        (config[:a] = 'new a').must_equal(config.instance_variable_get(:@data)[:a] = 'new a')
+        (config[:b] = 'b').must_equal(config.instance_variable_get(:@data)[:b] = 'b')
       end
 
       it 'should return the set value' do

@@ -1,5 +1,5 @@
 # Accessible
-[![Build Status](https://travis-ci.org/saclark/accessible.svg)](https://travis-ci.org/saclark/accessible) [![Coverage Status](https://coveralls.io/repos/saclark/accessible/badge.svg)](https://coveralls.io/r/saclark/accessible)
+[![Gem Version](https://badge.fury.io/rb/accessible.svg)](http://badge.fury.io/rb/accessible) [![Build Status](https://travis-ci.org/saclark/accessible.svg)](https://travis-ci.org/saclark/accessible) [![Coverage Status](https://coveralls.io/repos/saclark/accessible/badge.svg)](https://coveralls.io/r/saclark/accessible)
 
 A simple and flexible means of configuration for Ruby applications.
 
