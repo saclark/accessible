@@ -20,21 +20,5 @@ module Accessible
 
       orig_data.merge(new_data, &merger)
     end
-
-    def symbolize_keys(data)
-      if data.is_a?(Hash)
-        return data.inject({}) do |new_hash, (k, v)|
-          new_hash.merge!(k.to_sym => symbolize_keys(v))
-        end
-      end
-
-      if data.is_a?(Array)
-        return data.inject([]) do |new_array, v|
-          new_array.push(symbolize_keys(v))
-        end
-      end
-
-      data
-    end
   end
 end
