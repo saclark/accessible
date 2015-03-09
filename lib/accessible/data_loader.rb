@@ -24,7 +24,7 @@ module Accessible
       when String
         load_yaml_erb(source)
       else
-        raise("Invalid data source '#{source}'")
+        raise("Invalid data source: #{source}")
       end
     end
   end

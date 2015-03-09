@@ -82,7 +82,7 @@ class AccessorizersTest < Minitest::Spec
         obj.wont_respond_to(:b)
       end
 
-      it 'should define getters equivalent to calling :fetch on @data with the same key' do
+      it 'should define getters equivalent to calling `:fetch` on `@data` with the same key' do
         obj.to_h = { :foo => 'foo value'}
         Accessible::Accessorizers.accessorize_obj(obj)
         (obj.to_h.fetch(:foo)).must_equal(obj.foo)
@@ -104,7 +104,7 @@ class AccessorizersTest < Minitest::Spec
         obj.wont_respond_to(:b=)
       end
 
-      it 'should define accessors on set values' do
+      it 'should define accessors on values set after initial load' do
         obj.to_h = { :foo => 'foo value' }
         Accessible::Accessorizers.accessorize_obj(obj)
         obj.foo = { :new_value => 'new value' }
@@ -113,7 +113,7 @@ class AccessorizersTest < Minitest::Spec
         obj.to_h[:foo].must_respond_to(:new_value=)
       end
 
-      it 'should be the same as calling :[]= with the same key and value' do
+      it 'should define setters equivalent using `:[]=`' do
         obj.to_h = { :foo => 'foo value' }
         Accessible::Accessorizers.accessorize_obj(obj)
 
@@ -122,6 +122,16 @@ class AccessorizersTest < Minitest::Spec
         obj.to_h.delete(:foo)
         obj.foo = 'restored foo'
         obj.foo.must_equal('restored foo')
+      end
+
+      it 'should raise an error if the object does not respond to `:to_h`' do
+        proc { Accessible::Accessorizers.accessorize_obj(:foo) }.must_raise(NotImplementedError)
+
+        begin
+          Accessible::Accessorizers.accessorize_obj(:foo)
+        rescue NotImplementedError => e
+          e.message.must_equal("Expected `foo` to respond to `:to_h`")
+        end
       end
     end
 

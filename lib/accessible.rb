@@ -38,11 +38,8 @@ module Accessible
     end
 
     def []=(key, new_value)
-      define_singleton_method(key) { to_h.fetch(key) }
-      define_singleton_method("#{key}=") do |value|
-        to_h[key] = Accessible::Accessorizers.accessorize_data(value)
-      end
-
+      Accessorizers.define_accessors(to_h, key)
+      Accessorizers.define_accessors(self, key)
       to_h[key] = Accessible::Accessorizers.accessorize_data(new_value)
     end
   end

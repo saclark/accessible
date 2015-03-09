@@ -44,10 +44,12 @@ class DataLoaderTest < Minitest::Spec
       end
 
       it 'should raise an error when not given a hash, symbol, or string' do
+        proc { Accessible::DataLoader.load_source(100) }.must_raise(RuntimeError)
+
         begin
           Accessible::DataLoader.load_source(100)
         rescue RuntimeError => e
-          e.message.must_equal("Invalid data source '100'")
+          e.message.must_equal("Invalid data source: 100")
         end
       end
     end

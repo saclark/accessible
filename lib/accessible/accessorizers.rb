@@ -13,7 +13,7 @@ module Accessible
 
     def accessorize_obj(obj)
       if !obj.respond_to?(:to_h)
-        raise(NotImplementedError, "Expected #{obj} to respond to `:to_h`")
+        raise(NotImplementedError, "Expected `#{obj}` to respond to `:to_h`")
       end
 
       obj.to_h.keys.each do |key|

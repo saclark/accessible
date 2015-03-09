@@ -5,13 +5,13 @@ class AccessibleTest < Minitest::Spec
     let(:config) { Class.new { include Accessible } }
 
     describe '#to_h' do
-      it 'should create @data if it does not exist' do
+      it 'should create `@data` if it does not exist' do
         config.instance_variable_defined?(:@data).must_equal(false)
         config.to_h
         config.instance_variable_defined?(:@data).must_equal(true)
       end
 
-      it 'should assign an empty hash to @data if it does not exist' do
+      it 'should assign an empty hash to `@data` if it does not exist' do
         config.instance_variable_defined?(:@data).must_equal(false)
         config.to_h
         config.instance_variable_get(:@data).must_equal({})
@@ -23,13 +23,13 @@ class AccessibleTest < Minitest::Spec
         config.to_h.must_be_instance_of(Hash)
       end
 
-      it 'should return @data' do
+      it 'should return `@data`' do
         config.to_h.must_equal(config.instance_variable_get(:@data))
       end
     end
 
     describe '#load' do
-      it 'should reassign @data to the given data' do
+      it 'should reassign `@data` to the given data' do
         config.load({ :a => 'a' })
         config.to_h.must_equal({ :a => 'a' })
         config.load({ :b => 'b' })
@@ -73,7 +73,7 @@ class AccessibleTest < Minitest::Spec
         begin
           config.merge(100)
         rescue RuntimeError => e
-          e.message.must_equal("Invalid data source '100'")
+          e.message.must_equal("Invalid data source: 100")
         end
       end
 
@@ -82,7 +82,7 @@ class AccessibleTest < Minitest::Spec
         config.to_h.must_equal({ :a => 'a' })
       end
 
-      it 'should mutate @data' do
+      it 'should mutate `@data`' do
         config.load({ :foo => 'original' })
         config.merge({ :foo => 'new' })
         config.to_h.must_equal({ :foo => 'new' })
@@ -121,13 +121,13 @@ class AccessibleTest < Minitest::Spec
         })
       end
 
-      it 'should define acessors on @data' do
+      it 'should define acessors on `@data`' do
         config.merge({ :a => 'a' })
         config.to_h.singleton_methods.must_include(:a)
         config.to_h.singleton_methods.must_include(:a=)
       end
 
-      it 'should define accessors on the instance' do
+      it 'should define accessors on the class' do
         config.merge({ :a => 'a' })
         config.singleton_methods.must_include(:a)
         config.singleton_methods.must_include(:a=)
@@ -145,14 +145,43 @@ class AccessibleTest < Minitest::Spec
     end
 
     describe '#[]' do
-      it 'should' do
-        skip('pending')
+      it 'should delegate to `@data`' do
+        config.load({ :a => 'a' })
+        config[:a].must_equal(config.instance_variable_get(:@data)[:a])
+        config[:b].must_equal(config.instance_variable_get(:@data)[:b])
       end
     end
 
     describe '#[]=' do
-      it 'should' do
-        skip('pending')
+      it 'should add the key value pair to `@data`' do
+        config[:a] = 'a'
+        config.instance_variable_get(:@data)[:a].must_equal('a')
+      end
+
+      it 'should define acessors on `@data` for the given key' do
+        config[:a] = 'a'
+        config.instance_variable_get(:@data).singleton_methods.must_include(:a)
+        config.instance_variable_get(:@data).singleton_methods.must_include(:a=)
+      end
+
+      it 'should define accessors on the class for the given key' do
+        config[:a] = 'a'
+        config.singleton_methods.must_include(:a)
+        config.singleton_methods.must_include(:a=)
+      end
+
+      it 'should define accessors on set values' do
+        config[:a] = { :foo => 'foo value' }
+        config.a.singleton_methods.must_include(:foo)
+        config.a.foo.must_equal('foo value')
+      end
+
+      it 'should delegate to `@data`' do
+        (config[:a] = 'a').must_equal(config.instance_variable_get(:@data)[:a] = 'a')
+      end
+
+      it 'should return the set value' do
+        config.send(:[]=, :a, 'a').must_equal('a')
       end
     end
   end
