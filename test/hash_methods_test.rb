@@ -25,7 +25,6 @@ class HashMethodsTest < Minitest::Spec
 
       it 'should not pass non-hash values to the block' do
         raise_if_executed = proc { raise('block was excuted') }
-        class SubclassedHash < Hash; end
         Accessible::HashMethods.each_hash('foo', &raise_if_executed)
         Accessible::HashMethods.each_hash(:foo, &raise_if_executed)
         Accessible::HashMethods.each_hash(100, &raise_if_executed)
