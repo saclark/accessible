@@ -43,7 +43,7 @@ Let's imagine the following data is loaded:
 
 __Methods__
 
-You can get and set data by calling methods on your data set that match the name of the keys. If you try to get or set a key does not exist, an error will be thrown.
+You can get and set data by calling methods on your data set that match the name of the keys. If you try to get or set a key that does not exist, an error will be thrown.
 ```ruby
 MyConfig.environments.dev.users[1].name # => 'user1'
 
