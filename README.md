@@ -1,10 +1,32 @@
 # Accessible
 [![Gem Version](https://badge.fury.io/rb/accessible.svg)](http://badge.fury.io/rb/accessible) [![Build Status](https://travis-ci.org/saclark/accessible.svg)](https://travis-ci.org/saclark/accessible) [![Coverage Status](https://coveralls.io/repos/saclark/accessible/badge.svg)](https://coveralls.io/r/saclark/accessible)
 
-A simple and flexible means of configuration for Ruby applications.
+A simple and flexible means of setting up configuration for Ruby applications.
 
-# Set up a configuration class
-Create a class in your project, include the `Accessible` module, and `load` a data source. You may then also `merge` in any number of additional data sources.
+# Usage
+```ruby
+MyConfig = Accessible.create do |config|
+  confg.load   'config/defaults.yml'
+  config.merge 'config/environments.yml', ENV['APP_ENV']
+  config.merge { :foo => 'bar' }
+end
+
+MyConfig.wake_me_up.before.you_go.go?
+# => true
+```
+
+# Documentation
+
+## Creating an "Accessible" class
+Assign the result of calling Accessible's `create` method, passing it a block in which you may `load`/`merge` any number of data sources.
+```ruby
+MyConfig = Accessible.create do |config|
+  confg.load 'config/defaults.yml'
+  config.merge 'config/environments/dev.yml'
+end
+```
+
+Alternatively, you can create a class, include the `Accessible` module, and `load`/`merge` your data.
 ```ruby
 class MyConfig
   include Accessible
@@ -14,59 +36,194 @@ class MyConfig
 end
 ```
 
-> Note: The `load` method will clear out any previously loaded data and replace it with the new data, whereas `merge` will merge in new data with previously loaded data (i.e. matching keys will be overridden and new keys will be added).
+## Methods
+The following class methods are available on any class created with/including Accessible.
 
-Both `load` and `merge` can take any of the following as a data source:
-- A filepath to a yaml file (i.e. `'config/default.yml'`)
-- A symbol representing the name of a yaml file found in `config/` (i.e. `:default`)
-- A raw hash of data (i.e. `{ :base_url => 'http://www.example.com' }`)
+* [`Accessor methods`](#user-content-accessor-methods)
+* [`#load`](#user-content-load)
+* [`#merge`](#user-content-merge)
+* [`#[]`](#user-content--)
+* [`#[]=`](#user-content--1)
+* [`#to_h`](#user-content-to_h)
 
-Both methods also accept an optional second parameter: the name of a specific key within the data source, whose data is the only data that should be loaded from the source. This is provided in case you prefer to maintain a single configuration file with default and environment specific data separated out under different keys.
-
-# Access your configuration data
-There are two ways to access your configuration data.
-
-Let's imagine the following data is loaded:
+### Accessor methods
+When you load data into your class, getter and setter methods are defined on the class and recursively through the loaded data for each key. This way you can easily walk through your data:
 ```ruby
-{
-  :environments => {
-    :dev => {
-      :users => [
-        { :name => 'user0' },
-        { :name => 'user1' },
-        { :name => 'user2' }
-      ]
+MyConfig.my_deeply.nested.data_is.accessible
+```
+
+The main difference between accessor methods and [`[]`](#user-content--) and [`[]=`](#user-content--1) is that the accessor methods raise an error if a matching key does not exist.
+
+Examples:
+```ruby
+MyConfig = Accessible.create do |config|
+  config.load({
+    :characters => {
+      :calvin => {
+        :alter_egos => [
+          { :name => 'Spaceman Spiff' },
+          { :name => 'Tracer Bullet' }
+        ]
+      }
     }
-  }
-}
+  })
+end
+
+MyConfig.characters.calvin.alter_egos[0].name
+# => 'Spaceman Spiff'
+MyConfig.characters[:calvin].alter_egos[0].name
+# => 'Spaceman Spiff'
+
+MyConfig[:characters].calvin.alter_egos[1].name = 'Stupendous Man'
+# => 'Stupendous Man'
+MyConfig.characters.calvin
+# => {
+#   :alter_egos => [
+#     { :name => 'Spaceman Spiff' },
+#     { :name => 'Stupendous Man' }
+#   ]
+# }
+
+MyConfig.does_not_exist
+# => NoMethodError
+MyConfig[:does_not_exist]
+# => nil
+
+MyConfig.does_not_exist = 'foo'
+# => NoMethodError
+MyConfig[:new_key] = 'a new value'
+# => 'a new value'
+MyConfig.new_key
+# => 'a new value'
 ```
 
-__Methods__
+Be careful with this one though. It is best to treat its return value as read-only due to surprising results when used in combination with `[]=` ([read why](#user-content--1)).
 
-You can get and set data by calling methods on your data set that match the name of the keys. If you try to get or set a key that does not exist, an error will be thrown.
+### load
+`load(data_source, key = nil) -> data`
+
+Loads data into your class, wiping out any previously loaded data. It accepts a data source as well as an optional second parameter representing the name of a specific key within the data source from which data should be loaded.
+
+A data source can be any of the following:
+
+__Hash__  
+Loads the given hash:
 ```ruby
-MyConfig.environments.dev.users[1].name # => 'user1'
-
-MyConfig.environments.dev.users[1].name = 'new_user1'
-MyConfig.environments.dev.users[1].name # => 'new_user1'
-
-MyConfig.does_not_exist # => NoMethodError
-MyConfig.does_not_exist = 'foo' # => NoMethodError
+MyConfig.load({ :names => ['Calvin', 'Hobbes'] })
 ```
 
-__Brackets__
-
-You may also use the familiar `:[]` and `:[]=` methods, which behave the same as they do on any hash. `:[]` will return `nil` if the key does not exist, `:[]=` will create and set the key-value pair if the key does not exist. This makes `:[]` useful for providing default values.
+__String__  
+The given string should represent a file path to an existing yaml file to be loaded. An error will be throw if the file cannot be found:
 ```ruby
-MyConfig[:environments][:dev][:users][1][:name] # => 'user1'
-
-MyConfig[:environments][:dev][:users][1][:name] = 'new_user1'
-MyConfig[:environments][:dev][:users][1][:name] # => 'new_user1'
-
-MyConfig[:does_not_exist] || 'default' # => 'default'
-MyConfig[:new_key] = 'foo' # => `:new_key => 'foo'` pair is created
+MyConfig.load('config/env_config.yml')
 ```
 
----
+__Symbol__  
+The given symbol should represent the name of a `.yml` file located in a `/config` directory (relative to the working directory of the running process):
+```ruby
+MyConfig.load(:env_config)
+```
 
-Check out the unit tests for the nitty-gritty of how things should work.
+Therefore, the following are equivalent
+```ruby
+# These are the same
+MyConfig.load(:env_config)
+MyConfig.load('config/env_config.yml')
+```
+
+### merge
+`merge(data_source, namespace = nil) -> data`
+
+Equivalent to [`load`](#user-content-load) with the exception that the data source is _merged_ (i.e. entries with duplicate keys are overwritten) with previously loaded data.
+
+### []
+`[key] -> value`
+
+Gets data from your class. Returns `nil` if the key does not exist, making this method useful for assigning default values in the absence of a key.
+```ruby
+MyConfig.load({ :calvin => 'Spaceman Spiff' })
+
+MyConfig[:calvin]
+# => 'Spaceman Spiff'
+
+MyConfig[:susie]
+# => nil
+
+person = MyConfig[:susie] || 'Hobbes'
+# => 'Hobbes'
+```
+
+### []=
+`[key] = value -> value`
+
+Sets data on your class.
+```ruby
+MyConfig.load({})
+
+MyConfig[:calvin] = 'Spaceman Spiff'
+MyConfig[:calvin]
+# => 'Spaceman Spiff'
+
+MyConfig[:calvin] = 'Stupendous Man'
+MyConfig[:calvin]
+# => 'Stupendous Man'
+```
+
+Note, however, __this is _not_ functionally equivalent to setting values on the result of calling `to_h` on your class or it's values.__ (e.g. `MyConfig.to_h[:foo] = 'bar'`).
+
+The subtle difference here is that using `[]=` directly on the class ensures that the appropriate accessor methods are defined on the class, it's data, and the value being set. Thus, the following works:
+```ruby
+MyConfig.load({ :calvin => { :superhero => 'Spaceman Spiff' } })
+
+MyConfig[:calvin] = { :superhero => 'Stupendous Man' }
+
+MyConfig.calvin
+# => { :superhero => 'Stupendous Man' }
+
+MyConfig.calvin.superhero
+# => 'Stupendous Man'
+
+MyConfig.calvin[:detective] = 'Tracer Bullet'
+MyConfig.calvin.detective
+# => 'Tracer Bullet'
+
+MyConfig[:susie] = 'Derkins'
+MyConfig.susie
+# => 'Derkins'
+```
+
+Contrast this with the following behavior:
+```ruby
+MyConfig.load({ :calvin => { :superhero => 'Spaceman Spiff' } })
+
+MyConfig.to_h[:calvin] = { :superhero => 'Stupendous Man' }
+
+# The following only works by coincidence because an accessor for :calvin
+# was defined when the config data was initially loaded
+MyConfig.calvin
+# => { :superhero => 'Stupendous Man' }
+
+MyConfig.calvin.superhero
+# => NoMethodError: undefined method `superhero' for {:superhero=>"Stupendous Man"}:Hash
+
+MyConfig.calvin.to_h[:detective] = 'Tracer Bullet'
+MyConfig.calvin.detective
+# => NoMethodError: undefined method `detective' for {:superhero=>"Stupendous Man", :detective=>"Tracer Bullet"}:Hash
+
+MyConfig.to_h[:susie] = 'Derkins'
+MyConfig.susie
+# => NoMethodError: undefined method `susie' for MyConfig:Class
+```
+
+As you can see, being sure to only use `[]=` on your class and it's values _directly_ ensures the proper accessors are maintained. Setting values on the return value of `to_h` is a recipe for disaster.
+
+### to_h
+`to_h -> data`
+
+Returns all data loaded to your class as a hash.
+```ruby
+MyConfig.load({ :names => ['Calvin', 'Hobbes'] })
+
+MyConfig.to_h
+# => { :names => ['Calvin', 'Hobbes'] }
+```

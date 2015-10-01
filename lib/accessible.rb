@@ -8,24 +8,27 @@ module Accessible
     base.extend(ClassMethods)
   end
 
+  def self.create
+    klass = Class.new { extend ClassMethods }
+    yield klass if block_given?
+    klass
+  end
+
   module ClassMethods
     def to_h
       @data ||= {}
     end
 
-    def load(source, namespace = nil)
+    def load(data_source, namespace = nil)
       to_h.clear
-      merge(source, namespace)
+      merge(data_source, namespace)
     end
 
-    def merge(source, namespace = nil)
-      new_data = DataLoader.load_source(source)
+    def merge(data_source, namespace = nil)
+      source_data = DataLoader.load_source(data_source)
+      new_data = namespace ? source_data.fetch(namespace) : source_data
 
-      if namespace
-        @data = HashMethods.deep_merge(to_h, new_data.fetch(namespace))
-      else
-        @data = HashMethods.deep_merge(to_h, new_data)
-      end
+      @data = HashMethods.deep_merge(to_h, new_data)
 
       Accessorizers.accessorize_obj(self)
       Accessorizers.accessorize_data(to_h)
